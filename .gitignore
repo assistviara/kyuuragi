@@ -1,0 +1,28 @@
+# Python venv
+.venv/
+venv/
+ENV/
+env/
+
+# キャッシュ・一時ファイル
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE設定（VSCodeなど）
+.vscode/
+.idea/
+
+# OSごとの隠しファイル
+.DS_Store
+Thumbs.db
+
+# 出力フォルダ（必要に応じて）
+# 成果物を共有したい場合はコメントアウト（残す）
+# outputs/
+# data/output/
