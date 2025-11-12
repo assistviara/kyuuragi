@@ -2,8 +2,8 @@ from openpyxl import load_workbook
 import re
 
 # === 設定 ===
-src_path = "令和６年度月別収支状況.xlsx"
-dst_path = "令和６年度月別収支状況_renamed.xlsx"
+src_path = "６年・５年度売上比較_新.xlsx"
+dst_path = "６年・５年度売上比較_新_renamed.xlsx"
 
 # 和暦変換用
 REIWA_START = 2018  # 令和1年=2019年 → 西暦 = REIWA_START + n
