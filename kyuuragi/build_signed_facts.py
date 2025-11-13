@@ -1,11 +1,12 @@
 import pandas as pd
 from pathlib import Path
 import numpy as np
+import re
 
-csv_path = Path("facts_long.csv")
+csv_path = Path("facts_long_merged.csv")
 df = pd.read_csv(csv_path, encoding="utf-8-sig")
 
-# 推定結果（前セルの出力を再掲せず、ここで使う）
+# カラム名
 account_name_col = "勘定科目"
 amount_col = "金額"
 date_col = "日付"
@@ -14,7 +15,6 @@ date_col = "日付"
 income_names = {"商品売上高（4111）", "手数料収入（4112）", "その他の収入（4114）"}
 
 # 全角・半角や空白の揺れに少し強くするための正規化関数
-import re
 def normalize(s):
     if pd.isna(s):
         return ""
@@ -29,7 +29,6 @@ def normalize(s):
     return s
 
 df["_acc_norm"] = df[account_name_col].map(normalize)
-
 income_names_norm = {normalize(n) for n in income_names}
 
 # 2) 金額を数値化（カンマ除去など）
@@ -39,7 +38,7 @@ def to_number(x):
     s = str(x).replace(",", "")
     try:
         return float(s)
-    except:
+    except Exception:
         return np.nan
 
 df["_amount_raw"] = df[amount_col].map(to_number)
@@ -48,7 +47,11 @@ df["_amount_raw"] = df[amount_col].map(to_number)
 df["_is_income"] = df["_acc_norm"].isin(income_names_norm)
 
 # 4) 収入は +abs、支出は -abs に正規化
-df["金額_符号調整後"] = np.where(df["_is_income"], df["_amount_raw"].abs(), -df["_amount_raw"].abs())
+df["金額_符号調整後"] = np.where(
+    df["_is_income"],
+    df["_amount_raw"].abs(),
+    -df["_amount_raw"].abs()
+)
 
 # 5) 合計（全体）
 total_income = df.loc[df["_is_income"], "金額_符号調整後"].sum()
@@ -60,10 +63,9 @@ summary_overall = pd.DataFrame({
     "金額": [total_income, total_expense, net_profit]
 })
 
-# 6) 月次集計（あれば）
+# 6) 月次集計
 monthly_summary = None
 if date_col in df.columns:
-    # 日付を年月(Period M)へ
     dt = pd.to_datetime(df[date_col], errors="coerce")
     ym = dt.dt.to_period("M").astype(str)
     df["_年月"] = ym
@@ -75,20 +77,21 @@ if date_col in df.columns:
         .sort_values("年月")
     )
 
-# 7) 出力ファイル
+# 7) 明細出力
 out_path = Path("facts_long_signed.csv")
 df_out_cols = [c for c in df.columns if not c.startswith("_")]
 df[df_out_cols].to_csv(out_path, index=False, encoding="utf-8-sig")
 
-# 8) ユーザーへ可視化（プレビュー用）
-from caas_jupyter_tools import display_dataframe_to_user
+# 8) サマリーも CSV に保存（お好みで）
+summary_overall.to_csv("facts_summary_overall.csv", index=False, encoding="utf-8-sig")
+if monthly_summary is not None:
+    monthly_summary.to_csv("facts_summary_monthly.csv", index=False, encoding="utf-8-sig")
 
-display_dataframe_to_user("符号調整後 明細プレビュー（先頭200行）", df[df_out_cols].head(200))
-display_dataframe_to_user("損益サマリー（全体）", summary_overall)
+# 9) コンソールにざっくり表示
+print(f"[OK] 明細を {out_path} に出力しました。")
+print("\n=== 損益サマリー（全体） ===")
+print(summary_overall)
 
 if monthly_summary is not None:
-    display_dataframe_to_user("月次損益サマリー", monthly_summary)
-
-out_path.as_posix(), summary_overall.to_dict(orient="records")[:3], (monthly_summary.head(3).to_dict(orient="records") if monthly_summary is not None else None)
-
-
+    print("\n=== 月次損益サマリー（先頭5行） ===")
+    print(monthly_summary.head())
