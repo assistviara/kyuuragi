@@ -8,7 +8,7 @@ import calendar
 from datetime import date
 from pathlib import Path
 
-EXCEL_PATH = "令和６年度月別収支状況_renamed.xlsx"   # 必要に応じてフルパスに
+EXCEL_PATH = "令和６年度月別収支状況.xlsx"   # 必要に応じてフルパスに
 OUT_CSV    = "facts_long_2.csv"                # 出力先
 
 def extract_reiwa_year_from_filename(path):

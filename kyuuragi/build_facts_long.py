@@ -152,7 +152,7 @@ def main():
         # 日付は YYYY-MM-DD で統一
         facts_long["period_end"] = pd.to_datetime(facts_long["period_end"]).dt.strftime("%Y-%m-%d")
         facts_long.sort_values(["period_end", "account", "remark_item"], inplace=True)
-        facts_long.to_csv("facts_long.csv", index=False, encoding="utf-8-sig")
+        facts_long.to_csv("facts_long_1113.csv", index=False, encoding="utf-8-sig")
         print("[OK] facts_long.csv を出力しました。")
         print(facts_long.head(10).to_string(index=False))
 
